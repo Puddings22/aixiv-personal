@@ -13,7 +13,7 @@ import LoadingIndicator from './components/LoadingIndicator';
 import StatusMessage from './components/StatusMessage';
 import { fetchPapersFromArxiv } from './services/arxiv';
 import { convertPapersToCSV, downloadCSV } from './services/csvUtils';
-import { saveFavoritesToCookie, loadFavoritesFromCookie } from './utils/cookieUtils'; 
+import { saveFavorites, loadFavorites } from './utils/favoritesStorage'; 
 
 interface SearchViewCache {
   allDailyPapersForDate: Paper[]; // For daily view
@@ -84,26 +84,27 @@ const App: React.FC = () => {
   const [isLoadingMorePages, setIsLoadingMorePages] = useState<boolean>(false); // Track background loading
 
 
-  // Track if we've initialized favorites from cookies to prevent overwriting on mount
-  const [favoritesInitialized, setFavoritesInitialized] = useState<boolean>(false);
-
-  // Load favorites from cookies on mount - will be matched with papers when they load
+  // Load favorites from localStorage on mount
   useEffect(() => {
-    const favoriteIds = loadFavoritesFromCookie();
-    if (favoriteIds.length > 0) {
-      setFavoritesInitialized(true);
+    const storedFavorites = loadFavorites();
+    if (storedFavorites.length > 0) {
+      setFavoritePapers(storedFavorites);
     }
   }, []);
 
-  // Save favorites to cookie whenever they change (but only after initialization)
+  // Warn user on page close if they have favorites (localStorage can be cleared)
   useEffect(() => {
-    // Only save if we've initialized (loaded from cookies) or if user is actively changing favorites
-    // This prevents overwriting cookies with empty array on initial page load
-    if (favoritesInitialized) {
-      const favoriteIds = favoritePapers.map(p => p.id);
-      saveFavoritesToCookie(favoriteIds);
-    }
-  }, [favoritePapers, favoritesInitialized]);
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (favoritePapers.length > 0) {
+        e.preventDefault();
+        e.returnValue = 'You have favorite papers that may be lost if browser data is cleared. Consider exporting them first.';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [favoritePapers.length]);
 
    useEffect(() => {
     if (viewMode === 'favorites') {
@@ -124,15 +125,13 @@ const App: React.FC = () => {
 
 
   const toggleFavorite = (paperId: string) => {
-    // Ensure favorites are initialized when user toggles
-    if (!favoritesInitialized) {
-      setFavoritesInitialized(true);
-    }
-    
     setFavoritePapers(prevFavorites => {
       const isAlreadyFavorite = prevFavorites.some(p => p.id === paperId);
+      
+      let updatedFavorites: Paper[];
+      
       if (isAlreadyFavorite) {
-        return prevFavorites.filter(p => p.id !== paperId);
+        updatedFavorites = prevFavorites.filter(p => p.id !== paperId);
       } else {
         // Find paper from all possible current sources
         const paperToToggle = 
@@ -143,12 +142,17 @@ const App: React.FC = () => {
             (viewMode === 'search' ? displayedPapers.find(p => p.id === paperId) : displayedFavoritePapers.find(p => p.id === paperId));
             
         if (paperToToggle) {
-          return [...prevFavorites, paperToToggle];
+          updatedFavorites = [...prevFavorites, paperToToggle];
+        } else {
+          setStatusMessage({ text: "Could not add paper to favorites: original paper data not found.", type: "error" });
+          return prevFavorites;
         }
-        console.warn("Paper to favorite not found in current lists:", paperId);
-        setStatusMessage({ text: "Could not add paper to favorites: original paper data not found.", type: "error" });
-        return prevFavorites;
       }
+      
+      // Save to localStorage immediately
+      saveFavorites(updatedFavorites);
+      
+      return updatedFavorites;
     });
   };
   
@@ -243,17 +247,7 @@ const App: React.FC = () => {
         setTotalArxivResults(totalForDay);
         setCurrentPage(1);
         
-        // Load favorites from cookies and match with loaded papers
-        const favoriteIds = loadFavoritesFromCookie();
-        if (favoriteIds.length > 0) {
-          // Match favorite IDs with loaded papers
-          const favoritePapersData = allPapers.filter(p => favoriteIds.includes(p.id));
-          setFavoritePapers(favoritePapersData);
-          setFavoritesInitialized(true);
-        } else {
-          // No favorites in cookie, mark as initialized so we can save new ones
-          setFavoritesInitialized(true);
-        } 
+        // Favorites are already loaded from localStorage on mount, no need to match here
       } else if (currentSearchScope === 'search_all_arxiv') {
         if (!currentActiveGlobalSearchTerm || currentActiveGlobalSearchTerm.trim() === '') {
           const errorMsg = "Please enter a search term for 'Search All ArXiv'.";
@@ -271,22 +265,7 @@ const App: React.FC = () => {
         setTotalArxivResults(totalResults);
         setTotalDisplayedAfterFilter(totalResults);
         
-        // Load favorites from cookies and match with loaded papers
-        const favoriteIds = loadFavoritesFromCookie();
-        if (favoriteIds.length > 0) {
-          const favoritePapersData = fetchedPapers.filter(p => favoriteIds.includes(p.id));
-          // Merge with existing favorites, avoiding duplicates
-          setFavoritePapers(prev => {
-            const existingIds = new Set(prev.map(p => p.id));
-            const newFavorites = favoritePapersData.filter(p => !existingIds.has(p.id));
-            const merged = [...prev, ...newFavorites];
-            setFavoritesInitialized(true);
-            return merged;
-          });
-        } else {
-          // No favorites in cookie, mark as initialized so we can save new ones
-          setFavoritesInitialized(true);
-        } 
+        // Favorites are already loaded from localStorage on mount 
       }
     } catch (error) {
       console.error("Error in loadPapers:", error);
