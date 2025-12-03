@@ -1,0 +1,5 @@
+{
+  "name": " AIxiv Insights",
+  "description": "An application to explore, search, and analyze AI preprints from arXiv, featuring thematic clustering using Gemini API.",
+  "requestFramePermissions": []
+}

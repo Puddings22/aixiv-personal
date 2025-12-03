@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIxiv Insights</title>
+
+  <style>
+    /* Adding Inter font from Google Fonts - must be first */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    /* Custom scrollbar for better aesthetics */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+    /* Ensure full height for layout */
+    html, body, #root {
+      height: 100%;
+      margin: 0;
+      font-family: 'Inter', sans-serif; /* A clean, modern font */
+    }
+
+    /* Custom class for input text color */
+    .form-input-text-color {
+      color: #1f2937; /* Equivalent to text-gray-800 */
+    }
+    .form-input-text-color::placeholder {
+      color: #6b7280; /* Equivalent to text-gray-500 */
+    }
+    .form-input-text-color:disabled {
+      color: #6b7280; /* Equivalent to text-gray-500 for disabled state */
+    }
+
+    /* Attempt to make date picker icon more visible in WebKit browsers */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      opacity: 0.8 !important; /* Ensure it's not transparent */
+      filter: brightness(0.5) contrast(150%); /* Try to darken it if it's light and add contrast */
+      cursor: pointer;
+      /* margin-left: -1.75rem; /* Adjust if using absolute positioned custom icon */
+      /* position: relative; */
+      /* z-index: 1; */
+    }
+     /* Add some padding to ensure space for the native icon */
+    input[type="date"] {
+        padding-right: 0.75rem; /* Adjust as needed, default Tailwind input padding is usually sufficient */
+    }
+
+
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "recharts": "https://esm.sh/recharts@^2.15.3",
+    "@google/genai": "https://esm.sh/@google/genai@^1.0.1"
+  }
+}
+</script>
+
+</head>
+<body class="bg-gray-100">
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

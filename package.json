@@ -1,0 +1,39 @@
+{
+  "name": "aixiv-insights",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n \"FRONTEND,PROXY\" -c \"cyan,magenta\" \"npm run dev:frontend\" \"npm run dev:proxy\"",
+    "dev:frontend": "vite --port 43123 --host --config vite.config.ts",
+    "dev:proxy": "cd backend && python main.py",
+    "build": "vite build --config vite.config.ts",
+    "preview": "vite preview --port 43123 --config vite.config.ts",
+    "setup": "npm install",
+    "docker:build": "docker build -t aixiv-insights:latest .",
+    "docker:run": "docker-compose up -d",
+    "docker:stop": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:clean": "docker-compose down --rmi all --volumes --remove-orphans"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "recharts": "^2.15.3",
+    "@google/genai": "^1.0.1",
+    "express": "^4.19.2",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.2.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0",
+    "tailwindcss": "^3.4.0",
+    "postcss": "^8.4.0",
+    "autoprefixer": "^10.4.0",
+    "concurrently": "^8.2.2"
+  }
+}
