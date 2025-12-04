@@ -2,12 +2,17 @@
 import { ArxivCategory, SelectableCategory, ArxivSortOption } from './types';
 
 // Use proxy server in development to avoid CORS issues
+// In production (Docker), use relative URLs so nginx can proxy them
 // Set VITE_USE_PROXY=false to use direct API, or VITE_PROXY_PORT to change port
+const IS_PRODUCTION = import.meta.env.PROD || import.meta.env.NODE_ENV === 'production';
 const PROXY_PORT = import.meta.env.VITE_PROXY_PORT || '5000';
 const USE_PROXY = import.meta.env.VITE_USE_PROXY !== 'false'; // Default to true unless explicitly disabled
-export const ARXIV_API_BASE_URL = USE_PROXY 
-  ? `http://localhost:${PROXY_PORT}/api/arxiv/query`
-  : 'https://export.arxiv.org/api/query';
+
+export const ARXIV_API_BASE_URL = IS_PRODUCTION
+  ? '/api/arxiv/query' // Relative URL for nginx proxy in production
+  : USE_PROXY 
+    ? `http://localhost:${PROXY_PORT}/api/arxiv/query` // Development proxy
+    : 'https://export.arxiv.org/api/query'; // Direct API (not recommended due to CORS)
 export const PAPERS_PER_PAGE = 15;
 
 export const DEFAULT_ARXIV_CATEGORY: ArxivCategory = 'all';

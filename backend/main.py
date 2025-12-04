@@ -74,11 +74,17 @@ async def proxy_arxiv(
                 media_type="application/xml"
             )
     except httpx.RequestError as e:
-        print(f"Error proxying arXiv request: {e}", file=sys.stderr)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch from arXiv API: {str(e)}")
+        error_detail = f"{type(e).__name__}: {str(e)}"
+        print(f"Error proxying arXiv request: {error_detail}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        raise HTTPException(status_code=500, detail=f"Failed to fetch from arXiv API: {error_detail}")
     except Exception as e:
-        print(f"Unexpected error: {e}", file=sys.stderr)
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+        error_detail = f"{type(e).__name__}: {str(e)}"
+        print(f"Unexpected error: {error_detail}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {error_detail}")
 
 
 class PaperSummary(BaseModel):

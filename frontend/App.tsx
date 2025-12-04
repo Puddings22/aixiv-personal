@@ -203,15 +203,16 @@ const App: React.FC = () => {
     const numPages = Math.ceil(totalForDay / PAPERS_PER_PAGE);
     if (numPages > 1) {
       setIsLoadingMorePages(true);
-      // Load remaining pages in background
+      // Load remaining pages sequentially to maintain order and prevent race conditions
+      // Using functional setState ensures we always append to the latest state
       (async () => {
         for (let i = 1; i < numPages; i++) {
           const start = i * PAPERS_PER_PAGE;
           try {
             const pageData = await fetchPapersFromArxiv('date_category', start, PAPERS_PER_PAGE, date, category);
+            // Use functional setState to append to latest state, preventing race conditions and flickering
+            setAllDailyPapersForDate(prev => [...prev, ...pageData.papers]);
             allFetchedPapers = allFetchedPapers.concat(pageData.papers);
-            // Update state as each page loads
-            setAllDailyPapersForDate([...allFetchedPapers]);
           } catch (error) {
             console.error(`Error fetching page ${i+1} for ${date}/${category}:`, error);
           }
